@@ -84,7 +84,7 @@ while(!require(sp)) {install.packages("sp")}
 while(!require(RColorBrewer)) {install.packages("RColorBrewer")}
 while(!require(plotly)) {install.packages("plotly")}
 while(!require(PBSmapping)) {install.packages("PBSmapping")}
-require(devEMF)
+while(!require(devEMF)) {install.packages("devEMF")}
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Read in Raw StatArea Shapefile from the shared drive <U:\Boundaries\CFStats\AllAkCFStats\pvs_stat.shp>, which was out of date (i.e. missing stat areas)
@@ -104,7 +104,7 @@ sort(setdiff(unique(harvest$Stat.Area), StatAreas.shp@data$STAT_AREA))
 SEAK_StatArea_Harvest_Fishery.mat[as.character(sort(setdiff(unique(harvest$Stat.Area), StatAreas.shp@data$STAT_AREA))), ]
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Add harvest data to shapefile@data
+# Add stat area level harvest data to shapefile@data
 StatAreas.shp@data <- cbind(StatAreas.shp@data, SEAK_StatArea_Harvest_Fishery.mat[match(as.character(StatAreas.shp@data$STAT_AREA), rownames(SEAK_StatArea_Harvest_Fishery.mat)), ])
 
 # Replace NA with 0
@@ -112,9 +112,9 @@ table(is.na(StatAreas.shp@data[, 8:14]))
 StatAreas.shp@data[, 8:14][is.na(StatAreas.shp@data[, 8:14])] <- 0
 str(StatAreas.shp@data)
 
-# writePolyShape(x = StatAreas.shp, fn = "Figures/Maps/KMAStatAreas")
+# writePolyShape(x = StatAreas.shp, fn = "GIS Data/Stat Area/pvs_stat_harvest.shp")
 
-# StatAreas.shp <- readShapePoly("Figures/Maps/StatAreas.shp")
+# StatAreas.shp <- readShapePoly("GIS Data/Stat Area/pvs_stat_harvest.shp")
 str(StatAreas.shp, max.level = 2)
 
 
@@ -135,6 +135,8 @@ Plot_StatArea_SEAK_Harvest_Map.f <- function(fishery, max.col = NULL) {
          bty = 'n', x.intersp = 0.5, y.intersp = 0.07, lty = NULL)
   text(x = -137.4, y = 55.55, labels = "Harvest", cex = 1.3, adj = c(0, 0.5))
   text(x = -137.4, y = 55.7, labels = fishery, cex = 1.3, adj = c(0, 0.5))
+  maps::map.scale(x = -136.8, y = 54.65, ratio = FALSE, relwidth = 0.2)
+  north.arrow(xb = -136.7, yb = 54.85, len = 0.05, lab = "N")
 }
 
 Plot_StatArea_SEAK_Harvest_Map.f(fishery = "Drift", max.col = 3.25e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
@@ -143,7 +145,7 @@ Plot_StatArea_SEAK_Harvest_Map.f(fishery = "Commercial", max.col = 3.25e5)  # ma
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Add harvest data to shapefile@data
+# Add district level harvest data to shapefile@data
 StatAreas.shp@data <- cbind(StatAreas.shp@data, SEAK_District_Harvest_Fishery.mat[match(as.character(StatAreas.shp@data$DISTRICT), rownames(SEAK_District_Harvest_Fishery.mat)), ])
 
 # Replace NA with 0
@@ -160,6 +162,8 @@ Plot_District_SEAK_Harvest_Map.f <- function(fishery, max.col = NULL) {
   plot(StatAreas.shp, add = TRUE, 
        col = colorRampPalette(c("white", "green", "darkgreen"))(101)[round(StatAreas.shp@data[, fishery] / (max.col/100)) + 1],
        border = TRUE)
+  maps::map.scale(x = -137, y = 55, ratio = FALSE, relwidth = 0.2)
+  north.arrow(xb = -137, yb = 55.5, len = 0.05, lab = "N")
 }
 
 Plot_District_SEAK_Harvest_Map.f(fishery = "Drift", max.col = max(SEAK_District_Harvest_Fishery.mat))
@@ -170,7 +174,7 @@ Plot_District_SEAK_Harvest_Map.f(fishery = "Commercial", max.col = max(SEAK_Dist
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### PBS Mapping Package ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-require(PBSmapping)
+while(!require(PBSmapping)) {install.packages("PBSmapping")}
 
 # NOTE: This package requires basemap files to be located in your 'PBSmapping' directory, follow instructions here <https://thedescrambler.wordpress.com/2012/09/15/draw-maps-in-r/>
 # Test basemap of SEAK with Rivers and Borders
