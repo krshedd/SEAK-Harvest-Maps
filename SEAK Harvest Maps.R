@@ -96,6 +96,12 @@ str(StatAreas.shp@polygons[[1]])
 
 str(StatAreas.shp@data$STAT_AREA)
 
+# Subset shapefile for just SEAK
+SEAK_StatAreas <- StatAreas.shp@data$STAT_AREA[StatAreas.shp@data$STAT_AREA %in% as.character(10000:11599)]
+SEAKStatAreas.shp <- subset(StatAreas.shp, StatAreas.shp@data$STAT_AREA %in% SEAK_StatAreas)
+str(SEAKStatAreas.shp, max.level = 2)
+writePolyShape(x = SEAKStatAreas.shp, fn = "GIS Data/Stat Area/SEAKStatAreas.shp")
+
 
 # Are all the stat areas in SEAK harvest present in the shapefile?
 table(unique(harvest$Stat.Area) %in% StatAreas.shp@data$STAT_AREA)
@@ -188,7 +194,8 @@ borders <- importGSHHS("C:/Users/krshedd/Documents/R/win-library/3.3/PBSmapping/
 addLines(polys = borders, col = "black", lwd = 2)
 
 # Read in stat area shapefile
-StatAreasPBS.shp <- importShapefile(fn = "GIS Data/Stat Area/pvs_stat.shp")
+# StatAreasPBS.shp <- importShapefile(fn = "GIS Data/Stat Area/pvs_stat.shp")
+StatAreasPBS.shp <- importShapefile(fn = "GIS Data/Stat Area/SEAKStatAreas.shp")
 str(StatAreasPBS.shp, max.level = 2)
 str(attributes(StatAreasPBS.shp))
 str(attributes(StatAreasPBS.shp)[["PolyData"]])
@@ -251,6 +258,7 @@ Plot_StatArea_SEAK_Harvest_MapPBS.f <- function(fishery, max.col = NULL) {
   text(x = -137.3, y = 55.8, labels = fishery, cex = 1.3, adj = c(0, 0.5))
 }
 
-Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "Drift", max.col = 3.25e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
-Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "Seine", max.col = 3.25e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
-Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "Commercial", max.col = 3.25e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
+Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "Drift", max.col = 2.2e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
+Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "Seine", max.col = 2.2e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
+Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "SHA", max.col = 2.2e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
+Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "Commercial", max.col = 2.2e5)  # max(SEAK_StatArea_Harvest_Fishery.mat)
