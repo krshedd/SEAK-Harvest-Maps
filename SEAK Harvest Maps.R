@@ -371,3 +371,28 @@ Plot_StatArea_SEAK_Harvest_MapPBS.f <- function(fishery, max.col = NULL, xmin = 
 png(filename = "Figures/2013-17 Avg Commercial Harvest.png", width = 1100, height = 1400, res = 180)
 Plot_StatArea_SEAK_Harvest_MapPBS.f(fishery = "Commercial", max.col = 1.5e5, xmin = 226, ymax = 56.2)  # max(SEAK_StatArea_Harvest_Fishery.mat)
 dev.off()
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+png(filename = "Figures/Districts 3 and 4.png", width = 1100, height = 1400, res = 180)
+
+xmin = 226; xmax = 230; ymin = 54.5; ymax = 56.2
+
+land <- importGSHHS("C:/Users/krshedd/Documents/R/win-library/3.3/PBSmapping/gshhs_h.b", xlim = c(xmin, xmax), ylim = c(ymin, ymax) , maxLevel = 4, useWest = TRUE)
+plotMap(land, col = "gray90")
+
+# rivers <- importGSHHS("C:/Users/krshedd/Documents/R/win-library/3.3/PBSmapping/wdb_rivers_f.b", xlim = c(xmin, xmax), ylim = c(ymin, ymax), useWest = TRUE)
+# addLines(polys = rivers, col = "gray50", lwd = 2)
+
+borders <- importGSHHS("C:/Users/krshedd/Documents/R/win-library/3.3/PBSmapping/wdb_borders_f.b", xlim = c(xmin, xmax), ylim = c(ymin, ymax), useWest = TRUE)
+addLines(polys = borders, col = "black", lwd = 2)
+
+addPolys(polys = StatAreasPBS.shp, border = "black", col = c("white", "white", "red", "blue")[as.numeric(attributes(StatAreasPBS.shp)[["PolyData"]][, "DISTRICT"])] )
+
+legend("bottomleft",
+       legend = c("D103", "D104"),
+       fill = c("red", "blue"),
+       border = NA,
+       bty = 'n', cex = 1)
+dev.off()
