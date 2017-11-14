@@ -17,60 +17,66 @@ setwd("V:/Analysis/1_SEAK/Sockeye/Mixture/Harvest Data")
 
 # Get OceanAK Harvest data
 # So far I just have Sockeye 2014-2016
-file <- "Southeast Sockeye Salmon Catch by Day and Stat Area 2017.csv"
-harvest <- read.csv(file = file, as.is = TRUE)
-str(harvest)
+sapply(2013:2017, function(year) {
+  
+  file <- paste0("Southeast Sockeye Salmon Catch by Day and Stat Area ", year, ".csv")
+  harvest <- read.csv(file = file, as.is = TRUE)
+  str(harvest)
+  
+  # Simplify fishery names
+  unique(harvest$Fishery.Name)
+  fishery.sub <- cbind(c("SALMON, DRIFT GILLNET, SOUTHEAST", 
+                         "SALMON, SPECIAL HARVEST AREA <HATCHERY>, SOUTHEAST",
+                         "SALMON, PURSE SEINE, SOUTHEAST",
+                         "SALMON, POWER TROLL, STATEWIDE",
+                         "SALMON, HAND TROLL, STATEWIDE",
+                         "SALMON, SET GILLNET, YAKUTAT"),
+                       c("Drift", "SHA", "Seine", "Power Troll", "Hand Troll", "Setnet"))
+  harvest$Fishery.Simple <- harvest$Fishery.Name
+  for(i in 1:6) {
+    harvest$Fishery.Simple <- gsub(pattern = fishery.sub[i, 1], replacement = fishery.sub[i, 2], x = harvest$Fishery.Simple)
+  }
+  
+  # Remove random longline, etc. harvest
+  harvest <- subset(harvest, Fishery.Simple %in% c("Drift", "SHA", "Seine", "Power Troll", "Hand Troll", "Setnet"))
+  str(harvest)
+  
+  # View harvest summaries
+  # aggregate(Number ~ Fishery.Name, data = harvest, sum)
+  aggregate(Number ~ Fishery.Simple, data = harvest, sum)
+  aggregate(Number ~ District, data = harvest, sum)
+  aggregate(Number ~ District + Fishery.Simple, data = harvest, sum)
+  
+  
+  aggregate(Number ~ Stat.Area, data = harvest, sum)
+  aggregate(Number ~ Stat.Area + Fishery.Simple, data = harvest, sum)
+  
+  require(reshape)
+  cast(aggregate(Number ~ District + Fishery.Simple, data = harvest, sum), District ~ Fishery.Simple, value = "Number")
+  cast(aggregate(Number ~ Stat.Area + Fishery.Simple, data = harvest, sum), Stat.Area ~ Fishery.Simple, value = "Number")
+  
+  
+  require(lattice)
+  new.colors <- colorRampPalette(c("white", "black"))
+  SEAK_District_Harvest_Fishery.df <- cast(aggregate(Number ~ District + Fishery.Simple, data = harvest, sum), District ~ Fishery.Simple, value = "Number")
+  SEAK_District_Harvest_Fishery.df[is.na(SEAK_District_Harvest_Fishery.df)] <- 0
+  SEAK_District_Harvest_Fishery.mat <- data.matrix(frame = SEAK_District_Harvest_Fishery.df[, -1])
+  rownames(SEAK_District_Harvest_Fishery.mat) <- SEAK_District_Harvest_Fishery.df[, 1]
+  SEAK_District_Harvest_Fishery.mat <- cbind(SEAK_District_Harvest_Fishery.mat, "Commercial" = rowSums(SEAK_District_Harvest_Fishery.mat))
+  levelplot(t(SEAK_District_Harvest_Fishery.mat), col.regions = new.colors, xlab = "Fishery", ylab = "District", scales = list(x = list(rot = 45)), aspect = "fill")
+  
+  
+  SEAK_StatArea_Harvest_Fishery.df <- cast(aggregate(Number ~ Stat.Area + Fishery.Simple, data = harvest, sum), Stat.Area ~ Fishery.Simple, value = "Number")
+  SEAK_StatArea_Harvest_Fishery.df[is.na(SEAK_StatArea_Harvest_Fishery.df)] <- 0
+  SEAK_StatArea_Harvest_Fishery.mat <- data.matrix(frame = SEAK_StatArea_Harvest_Fishery.df[, -1])
+  rownames(SEAK_StatArea_Harvest_Fishery.mat) <- SEAK_StatArea_Harvest_Fishery.df[, 1]
+  SEAK_StatArea_Harvest_Fishery.mat <- cbind(SEAK_StatArea_Harvest_Fishery.mat, "Commercial" = rowSums(SEAK_StatArea_Harvest_Fishery.mat))
+  str(SEAK_StatArea_Harvest_Fishery.mat)
+  max(SEAK_StatArea_Harvest_Fishery.mat)  # 2013: 117,291; 2014: 265,810; 2015: 323,013; 2016: 212,374; 2017: 134,053
+  
+  assign(x = paste0("SEAK_StatArea_Harvest_Fishery", year, ".mat"), value = SEAK_StatArea_Harvest_Fishery.mat, pos = 1)
+})
 
-# Simplify fishery names
-unique(harvest$Fishery.Name)
-fishery.sub <- cbind(c("SALMON, DRIFT GILLNET, SOUTHEAST", 
-                       "SALMON, SPECIAL HARVEST AREA <HATCHERY>, SOUTHEAST",
-                       "SALMON, PURSE SEINE, SOUTHEAST",
-                       "SALMON, POWER TROLL, STATEWIDE",
-                       "SALMON, HAND TROLL, STATEWIDE",
-                       "SALMON, SET GILLNET, YAKUTAT"),
-                     c("Drift", "SHA", "Seine", "Power Troll", "Hand Troll", "Setnet"))
-harvest$Fishery.Simple <- harvest$Fishery.Name
-for(i in 1:6) {
-  harvest$Fishery.Simple <- gsub(pattern = fishery.sub[i, 1], replacement = fishery.sub[i, 2], x = harvest$Fishery.Simple)
-}
-
-# Remove random longline, etc. harvest
-harvest <- subset(harvest, Fishery.Simple %in% c("Drift", "SHA", "Seine", "Power Troll", "Hand Troll", "Setnet"))
-str(harvest)
-
-# View harvest summaries
-# aggregate(Number ~ Fishery.Name, data = harvest, sum)
-aggregate(Number ~ Fishery.Simple, data = harvest, sum)
-aggregate(Number ~ District, data = harvest, sum)
-aggregate(Number ~ District + Fishery.Simple, data = harvest, sum)
-
-
-aggregate(Number ~ Stat.Area, data = harvest, sum)
-aggregate(Number ~ Stat.Area + Fishery.Simple, data = harvest, sum)
-
-require(reshape)
-cast(aggregate(Number ~ District + Fishery.Simple, data = harvest, sum), District ~ Fishery.Simple, value = "Number")
-cast(aggregate(Number ~ Stat.Area + Fishery.Simple, data = harvest, sum), Stat.Area ~ Fishery.Simple, value = "Number")
-
-
-require(lattice)
-new.colors <- colorRampPalette(c("white", "black"))
-SEAK_District_Harvest_Fishery.df <- cast(aggregate(Number ~ District + Fishery.Simple, data = harvest, sum), District ~ Fishery.Simple, value = "Number")
-SEAK_District_Harvest_Fishery.df[is.na(SEAK_District_Harvest_Fishery.df)] <- 0
-SEAK_District_Harvest_Fishery.mat <- data.matrix(frame = SEAK_District_Harvest_Fishery.df[, -1])
-rownames(SEAK_District_Harvest_Fishery.mat) <- SEAK_District_Harvest_Fishery.df[, 1]
-SEAK_District_Harvest_Fishery.mat <- cbind(SEAK_District_Harvest_Fishery.mat, "Commercial" = rowSums(SEAK_District_Harvest_Fishery.mat))
-levelplot(t(SEAK_District_Harvest_Fishery.mat), col.regions = new.colors, xlab = "Fishery", ylab = "District", scales = list(x = list(rot = 45)), aspect = "fill")
-
-
-SEAK_StatArea_Harvest_Fishery.df <- cast(aggregate(Number ~ Stat.Area + Fishery.Simple, data = harvest, sum), Stat.Area ~ Fishery.Simple, value = "Number")
-SEAK_StatArea_Harvest_Fishery.df[is.na(SEAK_StatArea_Harvest_Fishery.df)] <- 0
-SEAK_StatArea_Harvest_Fishery.mat <- data.matrix(frame = SEAK_StatArea_Harvest_Fishery.df[, -1])
-rownames(SEAK_StatArea_Harvest_Fishery.mat) <- SEAK_StatArea_Harvest_Fishery.df[, 1]
-SEAK_StatArea_Harvest_Fishery.mat <- cbind(SEAK_StatArea_Harvest_Fishery.mat, "Commercial" = rowSums(SEAK_StatArea_Harvest_Fishery.mat))
-str(SEAK_StatArea_Harvest_Fishery.mat)
-max(SEAK_StatArea_Harvest_Fishery.mat)  # 2013: 117,291; 2014: 265,810; 2015: 323,013; 2016: 212,374; 2017: 134,053
 
 
 
