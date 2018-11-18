@@ -29,12 +29,22 @@ subset(stat_area, DISTRICT %in% as.character(101:103)) %>%
 
 Append harvest data, then plot with leaflet
 ```{r read_harvest_data}
-(harvest <- read_csv("../Southeast Sockeye Salmon Catch by Day and Stat Area 2017.csv"))
-(annual_harvest <- harvest %>% 
-  filter(`Fishery Name` == "SALMON, PURSE SEINE, SOUTHEAST") %>% 
+# (harvest <- read_csv("../Southeast Sockeye Salmon Catch by Day and Stat Area 2017.csv"))
+# (annual_harvest <- harvest %>% 
+#   filter(`Fishery Name` == "SALMON, PURSE SEINE, SOUTHEAST") %>% 
+#   group_by(`Stat Area`) %>% 
+#   summarise(harvest = sum(Number)) %>% 
+#   mutate(STAT_AREA = as.character(`Stat Area`)))
+
+
+(harvest <- read_csv("../../D101to103 Seine/2018/Harvest Data/ft - Harvest by Year, Gear, Harvest type, Stat Area, Stat Week.csv"))
+
+annual_harvest <- harvest %>% 
+  filter(`Gear Type` == "01 - Purse seine",
+         District %in% 101:103) %>% 
   group_by(`Stat Area`) %>% 
-  summarise(harvest = sum(Number)) %>% 
-  mutate(STAT_AREA = as.character(`Stat Area`)))
+  summarise(harvest = sum(Sockeye)) %>% 
+  mutate(STAT_AREA = as.character(`Stat Area`))
 ```
 
 Join up our harvest data with the `@data` object
@@ -54,9 +64,9 @@ harvest_popup <- paste0("<strong>Stat Area: </strong>", stat_area_d123@data$STAT
 pal <- colorNumeric(palette = "Greens", domain = stat_area_d123$harvest)
 
 stat_area_d123 %>% 
-  leaflet() %>% 
+  leaflet(width = "100%") %>% 
   addPolygons(color = "black", weight = 1, smoothFactor = 0.5, opacity = 1, fillOpacity = 0.75, 
               fillColor = ~pal(harvest), popup = harvest_popup) %>% 
   addTiles() %>% 
-  addLegend("bottomleft", pal = pal, values = ~harvest, title = "Sockeye Harvest", opacity = 1)
+  addLegend("bottomleft", pal = pal, values = ~harvest, title = "2018<br>D101-103 Seine<br>Sockeye Harvest", opacity = 1)
 ```
