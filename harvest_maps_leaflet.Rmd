@@ -1,0 +1,62 @@
+---
+title: "SEAK Harvest Map - leaflet"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup}
+library(tidyverse)
+library(DT)
+library(leaflet)
+library(rgdal)
+```
+
+Read in shapedata
+```{r read_shapefile}
+stat_area <- readOGR("../GIS Data/Stat Area/pvs_stat.shp")
+str(stat_area, max.level = 2)
+str(stat_area@data)
+```
+
+Plot with leaflet
+```{r}
+subset(stat_area, DISTRICT %in% as.character(101:103)) %>% 
+  leaflet() %>% 
+  addPolygons() %>% 
+  addTiles()
+```
+
+Append harvest data, then plot with leaflet
+```{r read_harvest_data}
+(harvest <- read_csv("../Southeast Sockeye Salmon Catch by Day and Stat Area 2017.csv"))
+(annual_harvest <- harvest %>% 
+  filter(`Fishery Name` == "SALMON, PURSE SEINE, SOUTHEAST") %>% 
+  group_by(`Stat Area`) %>% 
+  summarise(harvest = sum(Number)) %>% 
+  mutate(STAT_AREA = as.character(`Stat Area`)))
+```
+
+Join up our harvest data with the `@data` object
+```{r join_harvest}
+stat_area@data <- stat_area@data %>% 
+  left_join(annual_harvest, by = "STAT_AREA") %>% 
+  mutate(harvest = replace_na(`harvest`, 0))
+```
+
+Now subset for just D101-103 and plot harvest.
+```{r plot_harvest}
+stat_area_d123 <- subset(stat_area, DISTRICT %in% as.character(101:103))
+
+harvest_popup <- paste0("<strong>Stat Area: </strong>", stat_area_d123@data$STAT_AREA,
+                        "<br><strong>Harvest: </strong>", stat_area_d123@data$harvest)
+
+pal <- colorNumeric(palette = "Greens", domain = stat_area_d123$harvest)
+
+stat_area_d123 %>% 
+  leaflet() %>% 
+  addPolygons(color = "black", weight = 1, smoothFactor = 0.5, opacity = 1, fillOpacity = 0.75, 
+              fillColor = ~pal(harvest), popup = harvest_popup) %>% 
+  addTiles() %>% 
+  addLegend("bottomleft", pal = pal, values = ~harvest, title = "Sockeye Harvest", opacity = 1)
+```
