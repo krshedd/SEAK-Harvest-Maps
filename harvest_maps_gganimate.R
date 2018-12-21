@@ -31,8 +31,48 @@ harvest_map %>%
   # filter(!is.na(`Stat Week`)) %>%
   ggplot() +
   geom_sf(data = stat_area_D123) +
-  geom_sf(aes(fill = Sockeye)) +
+  geom_sf(aes(fill = Pink)) +
+  scale_fill_gradient(low = "white", high = "darkgreen") +
   coord_sf(crs = st_crs(stat_area_D123)) +
-  labs(title = 'D101-103 Purse Seine Sockeye Harvest for Stat Week: {current_frame}') +
+  labs(title = 'D101-103 Purse Seine Pink Harvest for Stat Week: {current_frame}') +
   transition_manual(`Stat Week`)
 
+anim_save(filename = "../Figures/2018_pink_seine_d123_harvest.gif")
+
+
+(harvest <- read_csv("../2018 SEAK ft - Harvest by Year, Gear, Harvest type, Stat Area, Stat Week.csv"))
+unique(harvest$`Gear Type`)
+stat_area <- st_read("../GIS Data/Stat Area/pvs_stat.shp")
+
+
+harvest_map.f <- function(district, gear, species){
+  stat_area_district <- stat_area %>% 
+    filter(DISTRICT %in% as.character(district))
+  
+  h_plot <- harvest %>% 
+    gather(Species, Harvest, -Year, -`Harvest Type`, -`Gear Type`, - District, -`Stat Area`, -`Stat Week`, -`Number of Permits`) %>% 
+    mutate(STAT_AREA = as.character(`Stat Area`)) %>% 
+    filter(`Gear Type` %in% gear,
+           District %in% district,
+           Species == species) %>% 
+    right_join(stat_area_district, by = "STAT_AREA") %>% 
+    ggplot() +
+    geom_sf(data = stat_area_district, fill = "white") +
+    geom_sf(aes(fill = Harvest)) +
+    scale_fill_gradient(low = "white", high = "darkgreen", na.value = "white") +
+    coord_sf(crs = st_crs(stat_area_district)) +
+    labs(title = paste('Districts:', paste(district, collapse = ", "), '\nGear:', gear, '\nSpecies:', species, '\nHarvest for Stat Week: {current_frame}')) +
+    transition_manual(`Stat Week`)
+  
+  animate(h_plot, fps = 3)
+}
+
+
+harvest_map.f(district = 113, gear = c("03 - Drift gillnet"), species = "Chum")
+
+
+# Trying to get a basemap via ggmap, doesn't work
+seak_basemap <- get_map("Ketchikan, AK", zoom = 11, maptype = "terrain")
+ph_basemap <- get_map(location="Philadelphia, PA", zoom=11, maptype = 'satellite')
+map.tokyo <- get_map("Tokyo")
+ggmap(map.tokyo)
