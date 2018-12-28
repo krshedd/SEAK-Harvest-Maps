@@ -76,3 +76,31 @@ seak_basemap <- get_map("Ketchikan, AK", zoom = 11, maptype = "terrain")
 ph_basemap <- get_map(location="Philadelphia, PA", zoom=11, maptype = 'satellite')
 map.tokyo <- get_map("Tokyo")
 ggmap(map.tokyo)
+
+
+
+# Chinook harvest for 2018
+
+
+district <- unique(harvest$District)
+gear <- grep(x = unique(harvest$`Gear Type`), pattern = "troll", value = TRUE)
+species = "Chinook"
+
+stat_area_district <- stat_area %>% 
+  filter(DISTRICT %in% as.character(district))
+
+harvest %>% 
+  gather(Species, Harvest, -Year, -`Harvest Type`, -`Gear Type`, - District, -`Stat Area`, -`Stat Week`, -`Number of Permits`) %>% 
+  mutate(STAT_AREA = as.character(`Stat Area`)) %>% 
+  filter(`Gear Type` %in% gear,
+         District %in% district,
+         Species == species) %>% 
+  group_by(Year, STAT_AREA) %>% 
+  summarise(Harvest = sum(Harvest, na.rm = TRUE)) %>% 
+  right_join(stat_area_district, by = "STAT_AREA") %>% 
+  ggplot() +
+  geom_sf(data = stat_area_district, fill = "white") +
+  geom_sf(aes(fill = Harvest)) +
+  scale_fill_gradient(low = "white", high = "darkgreen", na.value = "white") +
+  coord_sf(crs = st_crs(stat_area_district)) +
+  ggtitle("Chinook Commercial Troll Harvest for Calendar Year 2018")
